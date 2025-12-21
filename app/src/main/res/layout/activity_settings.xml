@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="#111111"
+    android:layoutDirection="rtl">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="הגדרות שעון"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="בחר מיקום:"
+        android:textColor="#AAAAAA"/>
+
+    <RadioGroup
+        android:id="@+id/rgLocationMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp">
+
+        <RadioButton
+            android:id="@+id/rbList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="רשימה"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="20dp"/>
+
+        <RadioButton
+            android:id="@+id/rbGps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GPS (אוטומטי)"
+            android:textColor="#FFFFFF"/>
+    </RadioGroup>
+
+    <Spinner
+        android:id="@+id/spinnerLocations"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#333333"
+        android:padding="10dp"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="שיטת חישוב עלות (מג&quot;א):"
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="10dp"/>
+
+    <RadioGroup
+        android:id="@+id/rgMga"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rbMga16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="16°"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="20dp"/>
+
+        <RadioButton
+            android:id="@+id/rbMga19"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="19.75°"
+            android:textColor="#FFFFFF"/>
+    </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="שיטת חישוב זריחה (גר&quot;א):"
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="20dp"/>
+
+    <RadioGroup
+        android:id="@+id/rgSunrise"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rbSunVisible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="נראית (0.833-)"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="20dp"/>
+
+        <RadioButton
+            android:id="@+id/rbSunZero"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="מישורית (0)"
+            android:textColor="#FFFFFF"/>
+    </RadioGroup>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/swKeepScreen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="השאר מסך דולק קבוע"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="30dp"
+        android:padding="10dp"/>
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="שמור וסגור"
+        android:layout_marginTop="30dp"/>
+
+</LinearLayout>

@@ -1,0 +1,48 @@
+# ===== Gradle =====
+.gradle/
+build/
+*/build/
+
+# ===== Local config =====
+local.properties
+keystore.properties
+
+# ===== Android Studio / IntelliJ =====
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Logs =====
+*.log
+
+# ===== APK / AAB =====
+*.apk
+*.aab
+
+# ===== Generated files =====
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ===== Kotlin / Java =====
+*.class
+
+# ===== NDK =====
+obj/
+
+# ===== Emulator / Device =====
+*.hprof
+
+# ===== Secrets / Keys =====
+*.jks
+*.keystore
+
+# ===== Firebase / Google services (אם יש) =====
+google-services.json
+
