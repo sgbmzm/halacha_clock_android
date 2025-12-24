@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private lateinit var tvLocationName: TextView
     private lateinit var tvCoords: TextView
     private lateinit var tvTime: TextView
+    private lateinit var tvDate: TextView
     private lateinit var tvUtc: TextView
     private lateinit var tvHebDate: TextView
     private lateinit var tvHoliday: TextView
@@ -73,6 +74,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
         tvCoords = findViewById(R.id.tvCoords)
         tvTime = findViewById(R.id.tvMainTime)
         tvUtc = findViewById(R.id.tvUtcOffset)
+        tvDate = findViewById(R.id.tvGregDate)
         tvHebDate = findViewById(R.id.tvHebDate)
         tvHoliday = findViewById(R.id.tvHoliday)
 
@@ -216,6 +218,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
         val data = JSONObject(jsonStr)
 
         tvLocationName.text = currentLocationName
+        tvDate.text = data.getString("date_greg")
         tvTime.text = data.getString("time")
         tvUtc.text = data.getString("utc_offset_str")
 
