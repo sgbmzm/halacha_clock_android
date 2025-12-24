@@ -9,6 +9,7 @@ from mpy_heb_date import get_heb_date_and_holiday_from_greg_date, heb_weekday_na
 # tz_id חייב להיות מזהה חוקי של IANA
 LOCATIONS = [
     {'name': 'ירושלים', 'lat': 31.7768, 'long': 35.2357, 'alt': 750.0, 'tz_id': 'Asia/Jerusalem'},
+    {'name': 'מודיעין עילית', 'lat': 31.940826, 'long': 35.037057, 'alt': 320.0, 'tz_id': 'Asia/Jerusalem'},
     {'name': 'בני ברק', 'lat': 32.0831, 'long': 34.8327, 'alt': 30.0, 'tz_id': 'Asia/Jerusalem'},
     {'name': 'חיפה', 'lat': 32.8, 'long': 34.991, 'alt': 300.0, 'tz_id': 'Asia/Jerusalem'},
     {'name': 'באר שבע', 'lat': 31.24, 'long': 34.79, 'alt': 280.0, 'tz_id': 'Asia/Jerusalem'},
@@ -61,8 +62,9 @@ def calculate_temporal_time_from_seconds(current_seconds, sunrise_seconds, sunse
     h = int(time_since / sec_per_hour)
     remainder = time_since % sec_per_hour
     m = int((remainder / sec_per_hour) * 60)
+    s = int((((remainder / sec_per_hour) * 60) - m) * 60)
 
-    return f'{h:02d}:{m:02d}', sec_per_hour
+    return f'{h:02d}:{m:02d}:{s:02d}', sec_per_hour
 
 def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
     # כאן utc_offset מגיע כבר מחושב נכון מהאנדרואיד לפי המיקום הנבחר
@@ -85,7 +87,7 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
     misheyakir = riset_other.tstart(0)
     tzet_geanim = riset_other.sunset(0)
 
-    current_hour_decimal = tm.tm_hour + tm.tm_min/60 + tm.tm_sec/3600
+    current_hour_decimal = (tm.tm_hour + tm.tm_min/60 + tm.tm_sec/3600) - utc_offset # כאן חובה להוריד את הפרש השעות
     s_alt, s_az, _, _ = riset_gra.alt_az_ra_dec(current_hour_decimal, sun=True)
     m_alt, m_az, _, _ = riset_gra.alt_az_ra_dec(current_hour_decimal, sun=False)
 
@@ -149,12 +151,12 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
         },
 
         "sun": {
-            "alt": f"{s_alt:.2f}",
-            "az": f"{s_az:.1f}"
+            "alt": f"{s_alt:.3f}",
+            "az": f"{s_az:.2f}"
         },
         "moon": {
-            "alt": f"{m_alt:.2f}",
-            "az": f"{m_az:.1f}",
+            "alt": f"{m_alt:.3f}",
+            "az": f"{m_az:.2f}",
             "percent": f"{moon_percent:.1f}%"
         },
 
