@@ -7,22 +7,7 @@ from mpy_heb_date import get_heb_date_and_holiday_from_greg_date, heb_weekday_na
 
 # --- רשימת המיקומים עם איזורי זמן ---
 # tz_id חייב להיות מזהה חוקי של IANA
-'''
-LOCATIONS = [
-    {'name': 'ירושלים', 'lat': 31.7768, 'long': 35.2357, 'alt': 750.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'מודיעין עילית', 'lat': 31.940826, 'long': 35.037057, 'alt': 320.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'בני ברק', 'lat': 32.0831, 'long': 34.8327, 'alt': 30.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'חיפה', 'lat': 32.8, 'long': 34.991, 'alt': 300.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'באר שבע', 'lat': 31.24, 'long': 34.79, 'alt': 280.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'תל אביב', 'lat': 32.08, 'long': 34.78, 'alt': 5.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'צפת', 'lat': 32.96, 'long': 35.49, 'alt': 850.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'אילת', 'lat': 29.55, 'long': 34.95, 'alt': 10.0, 'tz_id': 'Asia/Jerusalem'},
-    {'name': 'ניו יורק', 'lat': 40.71, 'long': -74.00, 'alt': 10.0, 'tz_id': 'America/New_York'},
-    {'name': 'לונדון', 'lat': 51.50, 'long': -0.12, 'alt': 15.0, 'tz_id': 'Europe/London'},
-    {'name': 'פריז', 'lat': 48.85, 'long': 2.35, 'alt': 35.0, 'tz_id': 'Europe/Paris'},
-    {'name': 'טוקיו', 'lat': 35.67, 'long': 139.65, 'alt': 40.0, 'tz_id': 'Asia/Tokyo'},
-]
-'''
+
 LOCATIONS = [
     {'name': 'משווה-0-0', 'lat': 0.0, 'long': 0.0, 'alt': 0.0, 'tz_id': 'Etc/UTC'},
     {'name': 'קו-המשווה', 'lat': 0.0, 'long': 0.0, 'alt': 0.0, 'tz_id': 'Etc/UTC'},
