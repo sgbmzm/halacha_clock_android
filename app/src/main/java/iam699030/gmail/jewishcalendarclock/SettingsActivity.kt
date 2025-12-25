@@ -46,12 +46,6 @@ class SettingsActivity : AppCompatActivity() {
         spinner.isEnabled = !isGps
         spinner.setSelection(prefs.getInt("location_index", 0))
 
-        val mgaDeg = prefs.getFloat("mga_deg", -16f)
-        rgMga.check(if (mgaDeg == -19.75f) R.id.rbMga19 else R.id.rbMga16)
-
-        val sunDeg = prefs.getFloat("sun_deg", -0.833f)
-        rgSunrise.check(if (sunDeg == 0f) R.id.rbSunZero else R.id.rbSunVisible)
-
         swKeepScreen.isChecked = prefs.getBoolean("keep_screen", true)
 
         // לוגיקה
@@ -63,11 +57,6 @@ class SettingsActivity : AppCompatActivity() {
             editor.putBoolean("is_gps", rgLocation.checkedRadioButtonId == R.id.rbGps)
             editor.putInt("location_index", spinner.selectedItemPosition)
 
-            val selectedMga = if (rgMga.checkedRadioButtonId == R.id.rbMga19) -19.75f else -16f
-            editor.putFloat("mga_deg", selectedMga)
-
-            val selectedSun = if (rgSunrise.checkedRadioButtonId == R.id.rbSunZero) 0f else -0.833f
-            editor.putFloat("sun_deg", selectedSun)
 
             editor.putBoolean("keep_screen", swKeepScreen.isChecked)
 
