@@ -126,7 +126,38 @@
                     android:textStyle="bold" />
                 <TextView android:id="@+id/tvGraMin" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.0 דק'" android:textColor="#00FFFF" android:textSize="16sp"/>
                 <TextView android:id="@+id/tvGraDef" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="הנץ - שקיעה" android:textColor="#888" android:textSize="11sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="שיטת זריחה ושקיעה"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginTop="10dp"/>
+
+                <RadioGroup
+                    android:id="@+id/rgSunrise"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rbSunVisible"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.833-°"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="10dp"/>
+
+                    <RadioButton
+                        android:id="@+id/rbSunZero"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0°"
+                        android:textColor="#FFFFFF"/>
+                </RadioGroup>
+
             </LinearLayout>
+
 
             <View android:layout_width="1dp" android:layout_height="80dp" android:background="#444" android:layout_marginHorizontal="8dp"/>
 
@@ -153,6 +184,36 @@
                     android:textStyle="bold" />
                 <TextView android:id="@+id/tvMgaMin" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.0 דק'" android:textColor="#00FFFF" android:textSize="14sp"/>
                 <TextView android:id="@+id/tvMgaDef" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="עלות - צאת" android:textColor="#888" android:textSize="11sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="שיטת עלות וצאהכ דרת"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginTop="10dp"/>
+
+                <RadioGroup
+                    android:id="@+id/rgMga"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rbMga16"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="16-°"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="10dp"/>
+
+                    <RadioButton
+                        android:id="@+id/rbMga19"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="19.75-°"
+                        android:textColor="#FFFFFF"/>
+                </RadioGroup>
+
             </LinearLayout>
         </LinearLayout>
 
