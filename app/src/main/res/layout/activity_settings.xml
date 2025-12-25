@@ -53,63 +53,7 @@
         android:padding="10dp"
         android:layout_marginBottom="20dp"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="שיטת חישוב עלות (מג&quot;א):"
-        android:textColor="#AAAAAA"
-        android:layout_marginTop="10dp"/>
 
-    <RadioGroup
-        android:id="@+id/rgMga"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <RadioButton
-            android:id="@+id/rbMga16"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="16°"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="20dp"/>
-
-        <RadioButton
-            android:id="@+id/rbMga19"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="19.75°"
-            android:textColor="#FFFFFF"/>
-    </RadioGroup>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="שיטת חישוב זריחה (גר&quot;א):"
-        android:textColor="#AAAAAA"
-        android:layout_marginTop="20dp"/>
-
-    <RadioGroup
-        android:id="@+id/rgSunrise"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <RadioButton
-            android:id="@+id/rbSunVisible"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="נראית (0.833-)"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="20dp"/>
-
-        <RadioButton
-            android:id="@+id/rbSunZero"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="מישורית (0)"
-            android:textColor="#FFFFFF"/>
-    </RadioGroup>
 
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/swKeepScreen"
