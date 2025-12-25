@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
 import android.widget.ImageView
+import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -24,7 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.util.TimeZone
-import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity(), LocationListener {
 
@@ -63,8 +63,11 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private var currentAlt = 750.0
     private var currentLocationName = "ירושלים (רשימה)"
 
-    // משתנה לשמירת ה-ID של איזור הזמן (למשל "America/New_York")
     private var currentTimeZoneId = "Asia/Jerusalem"
+
+    // <<< CHANGED/ADDED <<< משתנים לשמירת הבחירה בזמן אמת
+    private var selectedMgaDeg = -16f
+    private var selectedSunDeg = -0.833f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +102,30 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
         initPython()
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+
+        // <<< CHANGED/ADDED <<< חיבור כפתורי רדיו למסך הראשי
+        val rgMga = findViewById<RadioGroup>(R.id.rgMga)
+        val rgSunrise = findViewById<RadioGroup>(R.id.rgSunrise)
+
+        rgMga.setOnCheckedChangeListener { _, checkedId ->
+            selectedMgaDeg = if (checkedId == R.id.rbMga19) -19.75f else -16f
+            // <<< CHANGED/ADDED <<< שמירה ל-SharedPreferences
+            getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE).edit().apply {
+                putFloat("mga_deg", selectedMgaDeg)
+                apply()
+            }
+            updateDataImmediate()
+        }
+
+        rgSunrise.setOnCheckedChangeListener { _, checkedId ->
+            selectedSunDeg = if (checkedId == R.id.rbSunZero) 0f else -0.833f
+            // <<< CHANGED/ADDED <<< שמירה ל-SharedPreferences
+            getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE).edit().apply {
+                putFloat("sun_deg", selectedSunDeg)
+                apply()
+            }
+            updateDataImmediate()
+        }
     }
 
     override fun onResume() {
@@ -135,25 +162,31 @@ class MainActivity : AppCompatActivity(), LocationListener {
         if (isGps) {
             startGps()
             currentLocationName = "GPS (מחפש...)"
-            // ב-GPS אנחנו מניחים שהמשתמש נמצא פיזית במקום, אז משתמשים בשעון המכשיר
             currentTimeZoneId = TimeZone.getDefault().id
         } else {
             locationManager?.removeUpdates(this)
             val index = prefs.getInt("location_index", 0)
 
-            // שליפת המידע כולל timezone id מהפייתון
             val locDataStr = pythonModule.callAttr("get_location_coords", index).toString()
             val locJson = JSONObject(locDataStr)
 
             currentLat = locJson.getDouble("lat")
             currentLong = locJson.getDouble("long")
             currentAlt = locJson.getDouble("alt")
-            // כאן התיקון: שליפת ה-ID מתוך ה-JSON
-            // אם במקרה אין בקובץ (כמו ברשימה ישנה), ברירת מחדל ירושלים
             currentTimeZoneId = locJson.optString("tz_id", "Asia/Jerusalem")
 
             currentLocationName = locJson.getString("name") + " (רשימה)"
         }
+
+        // <<< CHANGED/ADDED <<< טעינת הבחירות הקיימות מהרשימות למסך הראשי
+        selectedMgaDeg = prefs.getFloat("mga_deg", -16f)
+        selectedSunDeg = prefs.getFloat("sun_deg", -0.833f)
+
+        val rgMga = findViewById<RadioGroup>(R.id.rgMga)
+        rgMga.check(if (selectedMgaDeg == -19.75f) R.id.rbMga19 else R.id.rbMga16)
+
+        val rgSunrise = findViewById<RadioGroup>(R.id.rgSunrise)
+        rgSunrise.check(if (selectedSunDeg == 0f) R.id.rbSunZero else R.id.rbSunVisible)
     }
 
     private fun startGps() {
@@ -173,33 +206,29 @@ class MainActivity : AppCompatActivity(), LocationListener {
         currentLong = loc.longitude
         currentAlt = loc.altitude
         currentLocationName = "GPS (פעיל)"
-        // עדכון איזור הזמן שיהיה תואם למכשיר (כי המשתמש ב-GPS)
         currentTimeZoneId = TimeZone.getDefault().id
     }
 
     private fun startClockLoop() {
         val runnable = object : Runnable {
             override fun run() {
-                updateData()
+                updateDataImmediate()
                 handler.postDelayed(this, 1000)
             }
         }
         handler.post(runnable)
     }
 
-    private fun updateData() {
+    private fun updateDataImmediate() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val prefs = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
-                val mgaDeg = prefs.getFloat("mga_deg", -16f)
-                val sunDeg = prefs.getFloat("sun_deg", -0.833f)
+                val mgaDeg = selectedMgaDeg
+                val sunDeg = selectedSunDeg
 
-                // חישוב UTC Offset מדויק לפי המיקום שנבחר!
                 val targetTimeZone = TimeZone.getTimeZone(currentTimeZoneId)
                 val offsetMillis = targetTimeZone.getOffset(System.currentTimeMillis())
                 val offsetHours = offsetMillis / 3600000.0
 
-                // שליחה לפייתון עם ה-Offset הנכון של המיקום
                 val jsonResultStr = pythonModule.callAttr(
                     "get_data_for_app",
                     currentLat, currentLong, currentAlt, offsetHours, mgaDeg, sunDeg
