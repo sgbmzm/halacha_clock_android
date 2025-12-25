@@ -2,7 +2,6 @@ package iam699030.gmail.jewishcalendarclock
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
@@ -11,10 +10,9 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.view.WindowManager
-import android.widget.ImageView
-import android.widget.RadioGroup
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.chaquo.python.Python
@@ -23,12 +21,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.TimeZone
+import com.google.android.material.switchmaterial.SwitchMaterial
 
 class MainActivity : AppCompatActivity(), LocationListener {
 
-    private lateinit var tvLocationName: TextView
     private lateinit var tvCoords: TextView
     private lateinit var tvTime: TextView
     private lateinit var tvDate: TextView
@@ -36,7 +35,6 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private lateinit var tvHebDate: TextView
     private lateinit var tvHoliday: TextView
 
-    // שעונים
     private lateinit var tvGraClock: TextView
     private lateinit var tvMgaClock: TextView
     private lateinit var tvGraMin: TextView
@@ -44,7 +42,6 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private lateinit var tvGraDef: TextView
     private lateinit var tvMgaDef: TextView
 
-    // שמש ירח
     private lateinit var tvSunAlt: TextView
     private lateinit var tvSunAz: TextView
     private lateinit var tvMoonAlt: TextView
@@ -53,19 +50,21 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
     private lateinit var tvZmanimList: TextView
 
+    private lateinit var rgLocation: RadioGroup
+    private lateinit var spinnerLocations: Spinner
+    private lateinit var rgMga: RadioGroup
+    private lateinit var rgSunrise: RadioGroup
+    private lateinit var swKeepScreen: SwitchMaterial
+
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var pythonModule: com.chaquo.python.PyObject
     private var locationManager: LocationManager? = null
 
-    // נתונים לחישוב
     private var currentLat = 31.7768
     private var currentLong = 35.2357
     private var currentAlt = 750.0
-    private var currentLocationName = "ירושלים (רשימה)"
-
     private var currentTimeZoneId = "Asia/Jerusalem"
 
-    // <<< CHANGED/ADDED <<< משתנים לשמירת הבחירה בזמן אמת
     private var selectedMgaDeg = -16f
     private var selectedSunDeg = -0.833f
 
@@ -73,7 +72,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        tvLocationName = findViewById(R.id.tvLocationName)
+        // --- אתחול TextViews ---
         tvCoords = findViewById(R.id.tvCoords)
         tvTime = findViewById(R.id.tvMainTime)
         tvUtc = findViewById(R.id.tvUtcOffset)
@@ -96,41 +95,102 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
         tvZmanimList = findViewById(R.id.tvZmanimList)
 
-        findViewById<ImageView>(R.id.btnSettings).setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+        // --- אתחול רכיבי בחירה ---
+        rgLocation = findViewById(R.id.rgLocationMode)
+        spinnerLocations = findViewById(R.id.spinnerLocations)
+        rgMga = findViewById(R.id.rgMga)
+        rgSunrise = findViewById(R.id.rgSunrise)
+        swKeepScreen = findViewById(R.id.swKeepScreen)
 
         initPython()
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
-        // <<< CHANGED/ADDED <<< חיבור כפתורי רדיו למסך הראשי
-        val rgMga = findViewById<RadioGroup>(R.id.rgMga)
-        val rgSunrise = findViewById<RadioGroup>(R.id.rgSunrise)
+        setupLocationControls()
+        setupMgaSunControls()
+        setupKeepScreenControl()
+    }
+
+    private fun initPython() {
+        if (!Python.isStarted()) Python.start(AndroidPlatform(this))
+        pythonModule = Python.getInstance().getModule("logic_api")
+    }
+
+    private fun setupLocationControls() {
+        val locationsJson = pythonModule.callAttr("get_locations_list").toString()
+        val locationsList = ArrayList<String>()
+        val jsonArray = JSONArray(locationsJson)
+        for (i in 0 until jsonArray.length()) locationsList.add(jsonArray.getString(i))
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, locationsList)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerLocations.adapter = adapter
+
+        val prefs = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
+        val isGps = prefs.getBoolean("is_gps", false)
+        rgLocation.check(if (isGps) R.id.rbGps else R.id.rbList)
+        spinnerLocations.isEnabled = !isGps
+        spinnerLocations.setSelection(prefs.getInt("location_index", 0))
+
+        rgLocation.setOnCheckedChangeListener { _, id ->
+            val usingGps = (id == R.id.rbGps)
+            spinnerLocations.isEnabled = !usingGps
+            prefs.edit().putBoolean("is_gps", usingGps).apply()
+            if (usingGps) startGps() else updateLocationFromSpinner(spinnerLocations.selectedItemPosition)
+            updateDataImmediate()
+        }
+
+        spinnerLocations.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                prefs.edit().putInt("location_index", position).apply()
+                if (rgLocation.checkedRadioButtonId == R.id.rbList)
+                    updateLocationFromSpinner(position)
+                updateDataImmediate()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    private fun setupMgaSunControls() {
+        val prefs = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
+        selectedMgaDeg = prefs.getFloat("mga_deg", -16f)
+        selectedSunDeg = prefs.getFloat("sun_deg", -0.833f)
+
+        rgMga.check(if (selectedMgaDeg == -19.75f) R.id.rbMga19 else R.id.rbMga16)
+        rgSunrise.check(if (selectedSunDeg == 0f) R.id.rbSunZero else R.id.rbSunVisible)
 
         rgMga.setOnCheckedChangeListener { _, checkedId ->
             selectedMgaDeg = if (checkedId == R.id.rbMga19) -19.75f else -16f
-            // <<< CHANGED/ADDED <<< שמירה ל-SharedPreferences
-            getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE).edit().apply {
-                putFloat("mga_deg", selectedMgaDeg)
-                apply()
-            }
+            prefs.edit().putFloat("mga_deg", selectedMgaDeg).apply()
             updateDataImmediate()
         }
 
         rgSunrise.setOnCheckedChangeListener { _, checkedId ->
             selectedSunDeg = if (checkedId == R.id.rbSunZero) 0f else -0.833f
-            // <<< CHANGED/ADDED <<< שמירה ל-SharedPreferences
-            getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE).edit().apply {
-                putFloat("sun_deg", selectedSunDeg)
-                apply()
-            }
+            prefs.edit().putFloat("sun_deg", selectedSunDeg).apply()
             updateDataImmediate()
         }
     }
 
+    private fun setupKeepScreenControl() {
+        val prefs = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
+        swKeepScreen.isChecked = prefs.getBoolean("keep_screen", true)
+        applyKeepScreenSetting()
+
+        swKeepScreen.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("keep_screen", isChecked).apply()
+            applyKeepScreenSetting()
+        }
+    }
+
+    private fun applyKeepScreenSetting() {
+        val keepScreen = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
+            .getBoolean("keep_screen", true)
+        if (keepScreen) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
     override fun onResume() {
         super.onResume()
-        loadPreferences()
         startClockLoop()
     }
 
@@ -140,113 +200,61 @@ class MainActivity : AppCompatActivity(), LocationListener {
         locationManager?.removeUpdates(this)
     }
 
-    private fun initPython() {
-        if (!Python.isStarted()) {
-            Python.start(AndroidPlatform(this))
-        }
-        val py = Python.getInstance()
-        pythonModule = py.getModule("logic_api")
-    }
-
-    private fun loadPreferences() {
-        val prefs = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
-        val isGps = prefs.getBoolean("is_gps", false)
-        val keepScreen = prefs.getBoolean("keep_screen", true)
-
-        if (keepScreen) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
-
-        if (isGps) {
-            startGps()
-            currentLocationName = "GPS (מחפש...)"
-            currentTimeZoneId = TimeZone.getDefault().id
-        } else {
-            locationManager?.removeUpdates(this)
-            val index = prefs.getInt("location_index", 0)
-
-            val locDataStr = pythonModule.callAttr("get_location_coords", index).toString()
-            val locJson = JSONObject(locDataStr)
-
-            currentLat = locJson.getDouble("lat")
-            currentLong = locJson.getDouble("long")
-            currentAlt = locJson.getDouble("alt")
-            currentTimeZoneId = locJson.optString("tz_id", "Asia/Jerusalem")
-
-            currentLocationName = locJson.getString("name") + " (רשימה)"
-        }
-
-        // <<< CHANGED/ADDED <<< טעינת הבחירות הקיימות מהרשימות למסך הראשי
-        selectedMgaDeg = prefs.getFloat("mga_deg", -16f)
-        selectedSunDeg = prefs.getFloat("sun_deg", -0.833f)
-
-        val rgMga = findViewById<RadioGroup>(R.id.rgMga)
-        rgMga.check(if (selectedMgaDeg == -19.75f) R.id.rbMga19 else R.id.rbMga16)
-
-        val rgSunrise = findViewById<RadioGroup>(R.id.rgSunrise)
-        rgSunrise.check(if (selectedSunDeg == 0f) R.id.rbSunZero else R.id.rbSunVisible)
-    }
-
     private fun startGps() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
             return
         }
         locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 100f, this)
-        val lastLoc = locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-        if (lastLoc != null) {
-            onLocationChanged(lastLoc)
-        }
+        locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { onLocationChanged(it) }
     }
 
     override fun onLocationChanged(loc: Location) {
         currentLat = loc.latitude
         currentLong = loc.longitude
         currentAlt = loc.altitude
-        currentLocationName = "GPS (פעיל)"
         currentTimeZoneId = TimeZone.getDefault().id
     }
 
+    private fun updateLocationFromSpinner(index: Int) {
+        val locDataStr = pythonModule.callAttr("get_location_coords", index).toString()
+        val locJson = JSONObject(locDataStr)
+        currentLat = locJson.getDouble("lat")
+        currentLong = locJson.getDouble("long")
+        currentAlt = locJson.getDouble("alt")
+        currentTimeZoneId = locJson.optString("tz_id", "Asia/Jerusalem")
+    }
+
     private fun startClockLoop() {
-        val runnable = object : Runnable {
+        handler.post(object : Runnable {
             override fun run() {
                 updateDataImmediate()
                 handler.postDelayed(this, 1000)
             }
-        }
-        handler.post(runnable)
+        })
     }
 
     private fun updateDataImmediate() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val mgaDeg = selectedMgaDeg
-                val sunDeg = selectedSunDeg
-
                 val targetTimeZone = TimeZone.getTimeZone(currentTimeZoneId)
                 val offsetMillis = targetTimeZone.getOffset(System.currentTimeMillis())
                 val offsetHours = offsetMillis / 3600000.0
 
                 val jsonResultStr = pythonModule.callAttr(
                     "get_data_for_app",
-                    currentLat, currentLong, currentAlt, offsetHours, mgaDeg, sunDeg
+                    currentLat, currentLong, currentAlt,
+                    offsetHours, selectedMgaDeg, selectedSunDeg
                 ).toString()
 
-                withContext(Dispatchers.Main) {
-                    parseAndDisplay(jsonResultStr)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+                withContext(Dispatchers.Main) { parseAndDisplay(jsonResultStr) }
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
     private fun parseAndDisplay(jsonStr: String) {
         val data = JSONObject(jsonStr)
 
-        tvLocationName.text = currentLocationName
         tvDate.text = data.getString("date_greg")
         tvTime.text = data.getString("time")
         tvUtc.text = data.getString("utc_offset_str")
@@ -284,9 +292,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
         val timesList = data.getJSONArray("times_list")
         val sb = StringBuilder()
-        for (i in 0 until timesList.length()) {
-            sb.append(timesList.getString(i)).append("\n")
-        }
+        for (i in 0 until timesList.length()) sb.append(timesList.getString(i)).append("\n")
         tvZmanimList.text = sb.toString()
     }
 }
