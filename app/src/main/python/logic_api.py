@@ -210,17 +210,17 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
             "gra_min": str(min_gra),
             "mga_clock": mga_time_str,
             "mga_min": str(min_mga),
-            "gra_def": f"הנץ: {seconds_to_time_str(sunrise)}\nשקיעה: {seconds_to_time_str(sunset)}" if sunrise else "",
+            "gra_def": f"זריחה: {seconds_to_time_str(sunrise)}\nשקיעה: {seconds_to_time_str(sunset)}" if sunrise else "",
             "mga_def": f"עלות השחר: {seconds_to_time_str(mga_sunrise)}\nצאה''כ דר''ת: {seconds_to_time_str(mga_sunset)}" if mga_sunrise else ""
         },
 
         "times_list": [
             f"עלות השחר({mga_deg}°): {seconds_to_time_str(mga_sunrise)}",
             f"משיכיר (-10.5°): {seconds_to_time_str(misheyakir)}",
-            f"הנץ החמה: {seconds_to_time_str(sunrise)}",
+            f"זריחה ({sunrise_deg:.3f}°): {seconds_to_time_str(sunrise)}",
             f"חצות היום: {seconds_to_time_str(chatzot)}",
-            f"שקיעה: {seconds_to_time_str(sunset)}",
-            f"צאת (-4.61°): {seconds_to_time_str(tzet_geanim)}"
+            f"שקיעה ({sunrise_deg:.3f}°): {seconds_to_time_str(sunset)}",
+            f"צאת דהגאונים(-4.61°): {seconds_to_time_str(tzet_geanim)}"
         ]
     }
     
