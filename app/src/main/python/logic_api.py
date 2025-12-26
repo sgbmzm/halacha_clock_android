@@ -172,10 +172,28 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
     mga_time_str, sec_mga = calculate_temporal_time_from_seconds(current_seconds_from_midnight, mga_sunrise, mga_sunset)
     min_mga = round(sec_mga / 60, 1)
 
+    
+    sozkash_gra = None
+    sozat_gra = None
     chatzot = None
+    mincha_gedola = None
+    mincha_ketana = None
+    pelag_hamincha = None
     if sunrise is not None and sunset is not None:
         day_len = sunset - sunrise
-        chatzot = sunrise + (day_len / 2)
+        sozkash_gra = sunrise + ((day_len / 12) * 3)
+        sozat_gra = sunrise + ((day_len / 12) * 4)
+        chatzot = sunrise + ((day_len / 12) * 6)
+        mincha_gedola = sunrise + ((day_len / 12) * 6.5)
+        mincha_ketana = sunrise + ((day_len / 12) * 9.5)
+        pelag_hamincha = sunrise + ((day_len / 12) * 10.45)
+    
+    sozkash_mga = None
+    sozat_mga = None
+    if mga_sunrise is not None and mga_sunset is not None:
+        mga_day_len = mga_sunset - mga_sunrise
+        sozkash_mga = mga_sunrise + ((mga_day_len / 12) * 3)
+        sozat_mga = mga_sunrise + ((mga_day_len / 12) * 4)
 
     # עיגול אופסט לתצוגה יפה (למשל 2.0 יהפוך ל-2, אבל 5.5 יישאר 5.5)
     offset_display = int(utc_offset) if utc_offset.is_integer() else utc_offset
@@ -202,7 +220,7 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
         "moon": {
             "alt": f"{m_alt:.3f}",
             "az": f"{m_az:.2f}",
-            "percent": f"{moon_percent:.1f}%"
+            "percent": f"{moon_percent:.2f}%"
         },
 
         "zmanim_clocks": {
@@ -218,9 +236,23 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
             f"עלות השחר({mga_deg}°): {seconds_to_time_str(mga_sunrise)}",
             f"משיכיר (-10.5°): {seconds_to_time_str(misheyakir)}",
             f"זריחה ({sunrise_deg:.3f}°): {seconds_to_time_str(sunrise)}",
+            
+            f"סוף שמע מג''א ({mga_deg}°): {seconds_to_time_str(sozkash_mga)}",
+            f"סוף שמע גר''א ({sunrise_deg:.3f}°): {seconds_to_time_str(sozkash_gra)}",
+            
+            f"סוף תפילה מג''א ({mga_deg}°): {seconds_to_time_str(sozat_mga)}",
+            f"סוף תפילה גר''א ({sunrise_deg:.3f}°): {seconds_to_time_str(sozat_gra)}",
+            
             f"חצות היום: {seconds_to_time_str(chatzot)}",
+            
+            f"מנחה גדולה: {seconds_to_time_str(mincha_gedola)}",
+            f"מנחה קטנה: {seconds_to_time_str(mincha_ketana)}",
+            f"פלג המנחה: {seconds_to_time_str(pelag_hamincha)}",
+            
             f"שקיעה ({sunrise_deg:.3f}°): {seconds_to_time_str(sunset)}",
-            f"צאת דהגאונים(-4.61°): {seconds_to_time_str(tzet_geanim)}"
+            
+            f"צאת דהגאונים(-4.61°): {seconds_to_time_str(tzet_geanim)}",
+            f"צאת דר''ת({mga_deg}°): {seconds_to_time_str(mga_sunset)}",
         ]
     }
     
