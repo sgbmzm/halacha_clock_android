@@ -10,6 +10,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -105,6 +106,16 @@ class MainActivity : AppCompatActivity(), LocationListener {
         initPython()
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
+        // --- בדיקה אם GPS כבוי בתחילת האפליקציה ---
+        val prefs = getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
+        val isGpsSaved = prefs.getBoolean("is_gps", false)
+        if (isGpsSaved && !isGpsEnabled()) {
+            val toast = Toast.makeText(this, "GPS כבוי, נעבור למיקום מהרשימה", Toast.LENGTH_LONG)
+            toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 200)
+            toast.show()
+            prefs.edit().putBoolean("is_gps", false).apply()
+        }
+
         setupLocationControls()
         setupMgaSunControls()
         setupKeepScreenControl()
@@ -113,6 +124,10 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private fun initPython() {
         if (!Python.isStarted()) Python.start(AndroidPlatform(this))
         pythonModule = Python.getInstance().getModule("logic_api")
+    }
+
+    private fun isGpsEnabled(): Boolean {
+        return locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
     }
 
     private fun setupLocationControls() {
@@ -133,9 +148,27 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
         rgLocation.setOnCheckedChangeListener { _, id ->
             val usingGps = (id == R.id.rbGps)
-            spinnerLocations.isEnabled = !usingGps
-            prefs.edit().putBoolean("is_gps", usingGps).apply()
-            if (usingGps) startGps() else updateLocationFromSpinner(spinnerLocations.selectedItemPosition)
+
+            if (usingGps) {
+                if (!isGpsEnabled()) {
+                    val toast = Toast.makeText(this, "GPS כבוי, נעבור למיקום מהרשימה", Toast.LENGTH_SHORT)
+                    toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 200)
+                    toast.show()
+                    rgLocation.check(R.id.rbList)
+                    spinnerLocations.isEnabled = true
+                    updateLocationFromSpinner(spinnerLocations.selectedItemPosition)
+                    prefs.edit().putBoolean("is_gps", false).apply()
+                } else {
+                    spinnerLocations.isEnabled = false
+                    prefs.edit().putBoolean("is_gps", true).apply()
+                    startGps()
+                }
+            } else {
+                spinnerLocations.isEnabled = true
+                updateLocationFromSpinner(spinnerLocations.selectedItemPosition)
+                prefs.edit().putBoolean("is_gps", false).apply()
+            }
+
             updateDataImmediate()
         }
 
@@ -146,6 +179,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
                     updateLocationFromSpinner(position)
                 updateDataImmediate()
             }
+
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
@@ -201,10 +235,26 @@ class MainActivity : AppCompatActivity(), LocationListener {
     }
 
     private fun startGps() {
+        if (!isGpsEnabled()) {
+            val toast = Toast.makeText(this, "GPS כבוי, נעבור למיקום מהרשימה", Toast.LENGTH_SHORT)
+            toast.setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL, 0, 200)
+            toast.show()
+            rgLocation.check(R.id.rbList)
+            spinnerLocations.isEnabled = true
+            updateLocationFromSpinner(spinnerLocations.selectedItemPosition)
+            getSharedPreferences("HalachaPrefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("is_gps", false)
+                .apply()
+            updateDataImmediate()
+            return
+        }
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
             return
         }
+
         locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 100f, this)
         locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { onLocationChanged(it) }
     }
@@ -274,11 +324,11 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
         val clocks = data.getJSONObject("zmanim_clocks")
         tvGraClock.text = clocks.getString("gra_clock")
-        tvGraMin.text = "${clocks.getString("gra_min")} דק'"
+        tvGraMin.text = "${clocks.getString("gra_min")} דקות לשעה"
         tvGraDef.text = clocks.getString("gra_def")
 
         tvMgaClock.text = clocks.getString("mga_clock")
-        tvMgaMin.text = "${clocks.getString("mga_min")} דק'"
+        tvMgaMin.text = "${clocks.getString("mga_min")} דקות לשעה"
         tvMgaDef.text = clocks.getString("mga_def")
 
         val sun = data.getJSONObject("sun")
