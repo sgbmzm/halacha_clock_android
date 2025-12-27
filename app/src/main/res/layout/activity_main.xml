@@ -311,6 +311,7 @@
                         android:text="10.222°-"
                         android:textColor="#00FF00"
                         android:textSize="35sp"
+                        android:textDirection="ltr"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -431,6 +432,147 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#444"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:baselineAligned="false">
+
+            <!-- גריניץ -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvGMT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23:24:25"
+                    android:textColor="#00FF00"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textDirection="ltr"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="(גריניץ) utc"
+                    android:textDirection="ltr"
+                    android:textColor="#888"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- קו -->
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#444"
+                android:layout_marginHorizontal="2dp"/>
+
+            <!-- אמיתי -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvLST"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23:24:25"
+                    android:textColor="#00FF00"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textDirection="ltr"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="מקומי אמיתי"
+                    android:textColor="#888"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- קו -->
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#444"
+                android:layout_marginHorizontal="2dp"/>
+
+            <!-- ממוצע -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvLMT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23:24:25"
+                    android:textColor="#00FF00"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textDirection="ltr"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="מקומי ממוצע"
+                    android:textColor="#888"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- קו -->
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="#444"
+                android:layout_marginHorizontal="2dp"/>
+
+            <!-- מהשקיעה -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvMagrab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23:24:25"
+                    android:textColor="#00FF00"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textDirection="ltr"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="מהשקיעה"
+                    android:textColor="#888"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
 
         <View
             android:layout_width="match_parent"
