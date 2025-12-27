@@ -33,6 +33,12 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private lateinit var tvTime: TextView
     private lateinit var tvDate: TextView
     private lateinit var tvUtc: TextView
+
+    private lateinit var tvGMT: TextView
+    private lateinit var tvLST: TextView
+    private lateinit var tvLMT: TextView
+    private lateinit var tvMagrab: TextView
+
     private lateinit var tvHebDate: TextView
     private lateinit var tvHoliday: TextView
 
@@ -77,7 +83,15 @@ class MainActivity : AppCompatActivity(), LocationListener {
         tvCoords = findViewById(R.id.tvCoords)
         tvTime = findViewById(R.id.tvMainTime)
         tvUtc = findViewById(R.id.tvUtcOffset)
+
+        tvGMT = findViewById(R.id.tvGMT)
+        tvLST = findViewById(R.id.tvLST)
+        tvLMT = findViewById(R.id.tvLMT)
+        tvMagrab = findViewById(R.id.tvMagrab)
+
         tvDate = findViewById(R.id.tvGregDate)
+
+
         tvHebDate = findViewById(R.id.tvHebDate)
         tvHoliday = findViewById(R.id.tvHoliday)
 
@@ -308,6 +322,10 @@ class MainActivity : AppCompatActivity(), LocationListener {
         tvDate.text = data.getString("date_greg")
         tvTime.text = data.getString("time")
         tvUtc.text = data.getString("utc_offset_str")
+        tvGMT.text = data.getString("gmt_time")
+        tvLST.text = data.getString("lst_time")
+        tvLMT.text = data.getString("lmt_time")
+        tvMagrab.text = data.getString("magrab_time")
 
         val locInfo = data.getJSONObject("location_info")
         tvCoords.text = "Lat: ${locInfo.getString("lat")}  Long: ${locInfo.getString("long")}  Alt: ${locInfo.getString("alt")}"
