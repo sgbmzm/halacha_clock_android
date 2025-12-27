@@ -1,9 +1,11 @@
 import time
 import json
 import math
+from math import sin, cos, tan, radians, degrees
 from sun_moon_sgb import RiSet
 from moonphase_sgb import MoonPhase
 from mpy_heb_date import get_heb_date_and_holiday_from_greg_date, heb_weekday_names
+
 
 # --- רשימת המיקומים עם איזורי זמן ---
 # tz_id חייב להיות מזהה חוקי של IANA
@@ -85,6 +87,77 @@ def seconds_to_time_str(seconds):
     s = int(seconds % 60)
     return f"{h:02d}:{m:02d}:{s:02d}"
 
+
+# פונקצייה שמקבלת זמן כחותמן זמן ומחזירה את משוואת הזמן בדקות ליום זה
+# לפי Meeus, בקירוב מצוין לשנים 2000–2100
+# נבנתה על ידי צאט גיפיטי
+def get_equation_of_time_from_timestamp(timestamp_input):
+    
+    # פונקצייה לקבלת זמן באלפי שנים מאז J2000.0 וגם יום יוליאני לצורך חישובים אסטרונומיים
+    def get_julian_centuries_since_J2000_and_jd(timestamp):
+        JD = timestamp / 86400.0 + 2440587.5
+        JC = (JD - 2451545.0) / 36525.0
+        return JC, JD
+    
+    # קבלת זמן באלפי שנים מאז J2000.0 לצורך החישובים, באמצעות הפונקצייה הנל
+    T, JD = get_julian_centuries_since_J2000_and_jd(timestamp_input)
+
+    # ואז ממשיכים כמו קודם:
+    L0 = radians((280.46646 + 36000.76983 * T) % 360)
+    e = 0.016708634 - 0.000042037 * T
+    M = radians((357.52911 + 35999.05029 * T) % 360)
+    y = tan(radians(23.439291 - 0.0130042 * T) / 2)
+    y *= y
+    equation_of_time_minutes = 4 * degrees(
+        y * sin(2 * L0)
+        - 2 * e * sin(M)
+        + 4 * e * y * sin(M) * cos(2 * L0)
+        - 0.5 * y * y * sin(4 * L0)
+        - 1.25 * e * e * sin(2 * M)
+    )
+    
+    equation_of_time_seconds = equation_of_time_minutes * 60
+    
+    return equation_of_time_seconds
+
+# פונקצייה לקבלת הפרש השעות המקומי מגריניץ בלי התחשבות בשעון קיץ
+# יש אפשרות להגדיר טרו או פאלס האם זה שעון קיץ או לא. כברירת מחדל זה לא
+# אפשר להגדיר האם רוצים את ההפרש בשעות או בשניות וברירת המחדל היא בשעות
+def get_generic_utc_offset(longitude_degrees, dst=False, in_seconds = False):
+    offset = abs(round(longitude_degrees/15)) % 24
+    offset = -offset if longitude_degrees < 0 else offset
+    offset = offset + 1 if dst else offset
+    return offset * 3600 if in_seconds else offset
+
+# פונקצייה להמרת זמן מ-שניות ל- סטרינג שעות דקות ושניות, או רק ל- סטרינג דקות ושניות שבניתי בסיוע רובי הבוט
+def convert_seconds(seconds, to_hours=False):
+    # המרה לערך מוחלט כדי לא להחזיר סימן מינוס
+    seconds = abs(seconds)
+    # חישוב מספר הדקות והשניות שיש בשעה אחת, והדפסתם בפורמט של דקות ושניות
+    if to_hours:
+        return f'{seconds // 3600 :02.0f}:{(seconds % 3600) // 60 :02.0f}:{seconds % 60 :02.0f}'
+    else:
+        return f'{seconds // 60 :02.0f}:{seconds % 60 :02.0f}'
+
+# פונקצייה לחישוב זמן מקומי (לפי חצות שנתי ממוצע שהוא בשעה 12), לפי קו האורך הגיאוגרפי האמיתי 
+def LMT_LST_EOT(utc_timestamp, longitude_degrees, LST_EOT = True):
+    offset_seconds = int(240 * longitude_degrees)  # 4 דקות לכל מעלה
+    lmt_seconds = int(utc_timestamp) + offset_seconds # חייבים לעשות אינט למנוע שגיאות במיקרופייתון
+    lmt_tuple = time.gmtime(int(lmt_seconds))   # לא מוסיף הטיה מקומית
+    local_mean_time_string = seconds_to_time_str(int(lmt_seconds))
+    ####################################################################
+    if LST_EOT:
+        equation_of_time_seconds = get_equation_of_time_from_timestamp(utc_timestamp)
+        lst_seconds = lmt_seconds + int(equation_of_time_seconds) # חייבים לעשות אינט למנוע שגיאות במיקרופייתון
+        lst_tuple = time.gmtime(int(lst_seconds))
+        local_solar_time_string = seconds_to_time_str(int(lst_seconds))
+        equation_of_time_string = f"{'+' if equation_of_time_seconds >0 else '-'}{convert_seconds(equation_of_time_seconds)}"
+    else:
+        local_solar_time_string, equation_of_time_string = "None","None"
+    return local_mean_time_string, local_solar_time_string, equation_of_time_string
+
+
+
 def calculate_temporal_time_from_seconds(current_seconds, sunrise_seconds, sunset_seconds):
     if sunrise_seconds is None or sunset_seconds is None: return "---", 0
 
@@ -141,7 +214,7 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
     moon_percent = mp.phase() * 100
 
     is_after_sunset = sunset and current_seconds_from_midnight > sunset
-
+        
     g_year, g_month, g_day = tm.tm_year, tm.tm_mon, tm.tm_mday
     if is_after_sunset:
         next_day_ts = local_timestamp + 86400
@@ -197,9 +270,20 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
 
     # עיגול אופסט לתצוגה יפה (למשל 2.0 יהפוך ל-2, אבל 5.5 יישאר 5.5)
     offset_display = int(utc_offset) if utc_offset.is_integer() else utc_offset
+    
+    # חישוב זמן שעבר מהשקיעה האחרונה.
+    # מ 12 בלילה עד השקיעה מחשבים את השקיעה של אתמול לפי השקיעה של היום פחות 24 שעות וזה לא מדוייק אבל זה רק זמני
+    seconds_since_last_sunset = current_seconds_from_midnight - sunset if current_seconds_from_midnight >= sunset else (24 * 3600 - sunset) + current_seconds_from_midnight
+    ########### 2. שעון מקומי ממוצע, שעון מקומי שמשי אמיתי שחצות תמיד ב 12:00, ומשוואת הזמן  
+    local_mean_time_string, local_solar_time_string, equation_of_time_string = LMT_LST_EOT(timestamp, long) # חייב לקבל זמן utc ולא מקומי
+   
 
     data = {
         "time": f"{tm.tm_hour:02d}:{tm.tm_min:02d}:{tm.tm_sec:02d}",
+        "gmt_time": seconds_to_time_str(timestamp),
+        "lst_time": local_solar_time_string,
+        "lmt_time": local_mean_time_string,
+        "magrab_time": seconds_to_time_str(seconds_since_last_sunset),
         "utc_offset_str": f"UTC{'+' if utc_offset >=0 else ''}{offset_display}",
         "date_greg": f"{tm.tm_mday}/{tm.tm_mon}/{tm.tm_year}",
 
@@ -233,7 +317,15 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
         },
 
         "times_list": [
-            f"עלות השחר({mga_deg}°): {seconds_to_time_str(mga_sunrise)}",
+            "שעון ההלכה לאנדרואיד פותח בזכות מפתח המכנה עצמו בשם ''איש אמת'', שנדבה רוחו להקים את ההקמה הראשונית של אפליקציה זו",
+            "",
+            "שעון ההלכה לאנדרואיד מבית ''כוכבים וזמנים''",
+            "sgbmzm@gmail.com",
+            "",
+            "להלן זמנים בשעון רגיל",
+            "שימו לב! דיוק הזמנים הללו סוטה בכדקה",
+            "",
+            f"עלות השחר ({mga_deg}°): {seconds_to_time_str(mga_sunrise)}",
             f"משיכיר (-10.5°): {seconds_to_time_str(misheyakir)}",
             f"זריחה ({sunrise_deg:.3f}°): {seconds_to_time_str(sunrise)}",
             
@@ -251,8 +343,8 @@ def get_data_for_app(lat, long, altitude, utc_offset, mga_deg, sunrise_deg):
             
             f"שקיעה ({sunrise_deg:.3f}°): {seconds_to_time_str(sunset)}",
             
-            f"צאת דהגאונים(-4.61°): {seconds_to_time_str(tzet_geanim)}",
-            f"צאת דר''ת({mga_deg}°): {seconds_to_time_str(mga_sunset)}",
+            f"צאת דהגאונים (-4.61°): {seconds_to_time_str(tzet_geanim)}",
+            f"צאת דר''ת ({mga_deg}°): {seconds_to_time_str(mga_sunset)}",
         ]
     }
     
